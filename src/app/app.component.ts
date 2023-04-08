@@ -65,7 +65,7 @@ export class AppComponent {
   changeBackground(): void {
     // const ran = Math.random() > 0.5 ? 'cyan' : 'orange';
     this.isCyan = !this.isCyan;
-    const ran = this.isCyan ? 'orange' : 'cyan';
+    const ran = this.isCyan ? '#00ffff1c' : '#ffa5001c';
     this.renderer.setStyle(this.document.body, 'background-color', ran);
   }
 }
