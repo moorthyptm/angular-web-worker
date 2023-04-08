@@ -1,22 +1,67 @@
-import { Component } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Component, Inject, Renderer2 } from '@angular/core';
+import { FibonacciSeriesAction } from './action';
+import { fibonacci } from './fibonacci';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
   title = 'angular-web-worker';
-}
+  worker: Worker | undefined;
 
-if (typeof Worker !== 'undefined') {
-  // Create a new
-  const worker = new Worker(new URL('./app.worker', import.meta.url));
-  worker.onmessage = ({ data }) => {
-    console.log(`page got message: ${data}`);
-  };
-  worker.postMessage('hello');
-} else {
-  // Web Workers are not supported in this environment.
-  // You should add a fallback so that your program still executes correctly.
+  inProgress = false;
+  start: Date | undefined;
+  end: Date | undefined;
+  time: number | undefined;
+  isCyan = false;
+
+  thread = 'worker';
+
+  constructor(
+    @Inject(DOCUMENT) private document: Document,
+    private renderer: Renderer2
+  ) {
+    if (typeof Worker !== 'undefined') {
+      this.worker = new Worker(new URL('./app.worker', import.meta.url));
+      this.worker.onmessage = this.onMessage.bind(this);
+    }
+    setInterval(this.changeBackground.bind(this), 200);
+  }
+
+  onMessage(event: MessageEvent<any>): void {
+    this.inProgress = false;
+    this.end = new Date();
+    this.time = this.end.valueOf() - this.start!.valueOf();
+  }
+
+  fibonacciSeries(number: number): void {
+    this.inProgress = true;
+    this.start = new Date();
+    // fallback
+    // this.worker
+    //   ? this.worker.postMessage(new FibonacciSeriesAction(number))
+    //   : this.usingMainThread(number);
+    this.thread === 'worker'
+      ? this.worker?.postMessage(new FibonacciSeriesAction(number))
+      : this.usingMainThread(number);
+  }
+
+  usingMainThread(number: number): void {
+    const result = `Main: Fibonacci Series for ${number} is : ${fibonacci(
+      number
+    )}`;
+    this.inProgress = false;
+    this.end = new Date();
+    this.time = this.end.valueOf() - this.start!.valueOf();
+  }
+
+  changeBackground(): void {
+    // const ran = Math.random() > 0.5 ? 'cyan' : 'orange';
+    this.isCyan = !this.isCyan;
+    const ran = this.isCyan ? 'orange' : 'cyan';
+    this.renderer.setStyle(this.document.body, 'background-color', ran);
+  }
 }

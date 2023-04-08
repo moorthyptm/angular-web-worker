@@ -1,6 +1,12 @@
 /// <reference lib="webworker" />
 
-addEventListener('message', ({ data }) => {
-  const response = `worker response to ${data}`;
-  postMessage(response);
+import { FIBONACCI_SERIES } from './action';
+import { fibonacci } from './fibonacci';
+
+addEventListener('message', (event) => {
+  const { action, data } = event.data;
+
+  if (action === FIBONACCI_SERIES) {
+    postMessage(`Worker: Fibonacci Series for ${data} is : ${fibonacci(data)}`);
+  }
 });
