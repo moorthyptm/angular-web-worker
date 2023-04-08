@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, Inject, Renderer2 } from '@angular/core';
+import { Component, Inject, NgZone, Renderer2 } from '@angular/core';
 import { FibonacciSeriesAction } from './action';
 import { fibonacci } from './fibonacci';
 
@@ -22,13 +22,17 @@ export class AppComponent {
 
   constructor(
     @Inject(DOCUMENT) private document: Document,
-    private renderer: Renderer2
+    private renderer: Renderer2,
+    private zone: NgZone
   ) {
     if (typeof Worker !== 'undefined') {
       this.worker = new Worker(new URL('./app.worker', import.meta.url));
       this.worker.onmessage = this.onMessage.bind(this);
     }
-    setInterval(this.changeBackground.bind(this), 200);
+    // Just for demo purpose
+    this.zone.runOutsideAngular(() => {
+      setInterval(this.changeBackground.bind(this), 200);
+    });
   }
 
   onMessage(event: MessageEvent<any>): void {
